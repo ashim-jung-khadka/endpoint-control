@@ -1,0 +1,6 @@
+access-control:
+  endpoints:
+    - url-pattern: /member
+      rights:
+        - hasMx301
+        - hasMxMedicalDirector
