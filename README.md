@@ -1,4 +1,4 @@
-# Config Driven Url Control
+# Endpoint Control using Configuration
 
 ## Description
 - Control all endpoint using rights.
