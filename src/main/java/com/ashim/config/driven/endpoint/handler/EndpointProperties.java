@@ -19,6 +19,6 @@ import java.util.List;
 @ConfigurationProperties("access-control")
 public class EndpointProperties {
 
-    private List<Endpoint> endpoints;
+	private List<Endpoint> endPoints;
 
 }

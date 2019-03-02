@@ -4,6 +4,7 @@ import com.ashim.config.driven.endpoint.model.Endpoint;
 import com.ashim.config.driven.endpoint.model.MiscRights;
 import com.ashim.config.driven.endpoint.utils.EndpointUtils;
 import com.google.common.base.Preconditions;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,83 +17,96 @@ import java.util.Set;
  */
 class EndpointAccessControl {
 
-    private static String ROOT_URL = "/";
+	private static String ROOT_URL = "/";
 
-    private Map<String, List<String>> endpointAndRights;
+	private Map<String, List<String>> endpointAndRights;
 
-    EndpointAccessControl(EndpointProperties endpointProperties, Set<String> validEndpoints) {
+	EndpointAccessControl(EndpointProperties endpointProperties, Set<String> validEndpoints) {
 
-        Preconditions.checkNotNull(validEndpoints, "at least one valid end points should be available");
+		Preconditions.checkNotNull(validEndpoints, "at least one valid end points should be available");
 
-        this.endpointAndRights = new HashMap<>();
-        this.initializeEndpointAndRights(endpointProperties, validEndpoints);
-    }
+		this.endpointAndRights = new HashMap<>();
+		this.initializeEndpointAndRights(endpointProperties, validEndpoints);
+	}
 
-    private void initializeEndpointAndRights(EndpointProperties endpointProperties, Set<String> validEndpoints) {
+	private void initializeEndpointAndRights(EndpointProperties endpointProperties, Set<String> validEndpoints) {
 
-        for (Endpoint endpoint : endpointProperties.getEndpoints()) {
+		for (Endpoint endpoint : endpointProperties.getEndPoints()) {
 
-            String urlPattern = EndpointUtils.normalizeUrlPath(endpoint.getUrlPattern());
+			String urlPattern = EndpointUtils.normalizeUrlPath(endpoint.getUrlPattern());
 
-            this.validateUrlPattern(urlPattern, validEndpoints);
-            this.validateRights(endpoint.getRights());
+			this.validateUrlPattern(urlPattern, validEndpoints);
+			this.validateRights(endpoint.getRights());
+			urlPattern = this.replaceByPathVariable(urlPattern, endpoint);
 
-            endpointAndRights.put(urlPattern, endpoint.getRights());
-        }
+			endpointAndRights.put(urlPattern, endpoint.getRights());
+		}
 
-    }
+	}
 
-    private void validateUrlPattern(String urlPattern, Set<String> validEndpoints) {
-        Optional<String> mappedValidEndpoints = validEndpoints.stream()
-                .map(EndpointUtils::normalizeUrlPath)
-                .filter(endPoint -> endPoint.startsWith(urlPattern))
-                .findFirst();
+	private void validateUrlPattern(String urlPattern, Set<String> validEndpoints) {
+		Optional<String> mappedValidEndpoints = validEndpoints.stream()
+				.map(EndpointUtils::normalizeUrlPath)
+				.filter(endPoint -> endPoint.startsWith(urlPattern))
+				.findFirst();
 
-        mappedValidEndpoints.orElseThrow(
-                () -> new NoSuchURLException("URL : " + urlPattern + " not valid." + " Valid URLs : " + validEndpoints)
-        );
-    }
+		mappedValidEndpoints.orElseThrow(
+				() -> new NoSuchURLException("URL : " + urlPattern + " not valid." + " Valid URLs : " + validEndpoints)
+		);
+	}
 
-    private void validateRights(List<String> rights) {
-        List<String> definedRights = EndpointUtils.getRightsProperties(MiscRights.class);
-        Optional<String> mappedRights = rights.stream().filter(definedRights::contains).findFirst();
+	private void validateRights(List<String> rights) {
+		List<String> definedRights = EndpointUtils.getRightsProperties(MiscRights.class);
+		Optional<String> mappedRights = rights.stream().filter(definedRights::contains).findFirst();
 
-        mappedRights.orElseThrow(
-                () -> new NoSuchRightsException("Rights : " + rights + " not valid.")
-        );
-    }
+		mappedRights.orElseThrow(
+				() -> new NoSuchRightsException("Rights : " + rights + " not valid.")
+		);
+	}
 
-    boolean hasAccessToEndpoint(String endpoint, MiscRights miscRights) {
+	private String replaceByPathVariable(String urlPattern, Endpoint endpoint) {
 
-        Preconditions.checkNotNull(endpoint);
-        Preconditions.checkNotNull(miscRights);
+		String endpointUrl = urlPattern;
 
-        return ROOT_URL.equals(endpoint) || checkEndpointAccess(endpoint, miscRights);
-    }
+		if (!StringUtils.isEmpty(endpoint.getPathVariable())) {
+			endpointUrl = endpointUrl.substring(0, endpointUrl.indexOf("{")) + endpoint.getPathVariable();
+		}
 
-    private boolean checkEndpointAccess(String endpoint, MiscRights miscRights) {
+		return EndpointUtils.normalizeUrlPath(endpointUrl);
+	}
 
-        if (endpointAndRights.containsKey(endpoint)) {
-            return endpointAndRights.get(endpoint).stream()
-                    .map(rights -> EndpointUtils.isRightsEnabled(rights, miscRights))
-                    .findFirst()
-                    .orElse(false);
+	boolean hasAccessToEndpoint(String endpoint, MiscRights miscRights) {
 
-        } else {
-            String parentEndpoint = endpoint.replaceFirst("\\w+/$", "");
-            return ROOT_URL.equals(parentEndpoint) || checkEndpointAccess(parentEndpoint, miscRights);
-        }
-    }
+		Preconditions.checkNotNull(endpoint);
+		Preconditions.checkNotNull(miscRights);
 
-    private class NoSuchURLException extends RuntimeException {
-        NoSuchURLException(String message) {
-            super(message);
-        }
-    }
+		return ROOT_URL.equals(endpoint) || checkEndpointAccess(endpoint, miscRights);
+	}
 
-    private class NoSuchRightsException extends RuntimeException {
-        NoSuchRightsException(String message) {
-            super(message);
-        }
-    }
+	private boolean checkEndpointAccess(String endpoint, MiscRights miscRights) {
+
+		String normalizedEndpoint = EndpointUtils.normalizeUrlPath(endpoint);
+
+		if (endpointAndRights.containsKey(normalizedEndpoint)) {
+
+			return endpointAndRights.get(normalizedEndpoint).stream()
+					.allMatch(rights -> EndpointUtils.isRightsEnabled(rights, miscRights));
+
+		} else {
+			String parentEndpoint = normalizedEndpoint.replaceFirst("\\w+/$", "");
+			return ROOT_URL.equals(parentEndpoint) || checkEndpointAccess(parentEndpoint, miscRights);
+		}
+	}
+
+	private class NoSuchURLException extends RuntimeException {
+		NoSuchURLException(String message) {
+			super(message);
+		}
+	}
+
+	private class NoSuchRightsException extends RuntimeException {
+		NoSuchRightsException(String message) {
+			super(message);
+		}
+	}
 }

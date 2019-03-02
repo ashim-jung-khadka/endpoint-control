@@ -16,50 +16,50 @@ import java.util.List;
  */
 public class EndpointUtils {
 
-    private static Logger logger = LoggerFactory.getLogger(EndpointUtils.class);
+	private static Logger logger = LoggerFactory.getLogger(EndpointUtils.class);
 
-    private EndpointUtils() {
-    }
+	private EndpointUtils() {
+	}
 
-    public static String normalizeUrlPath(String path) {
-        path = path.trim();
+	public static String normalizeUrlPath(String path) {
+		path = path.trim();
 
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
-        if (!path.endsWith("/")) {
-            path = path + "/";
-        }
-        return path;
-    }
+		if (!path.startsWith("/")) {
+			path = "/" + path;
+		}
+		if (!path.endsWith("/")) {
+			path = path + "/";
+		}
+		return path;
+	}
 
-    public static List<String> getRightsProperties(Class clazz) {
+	public static List<String> getRightsProperties(Class clazz) {
 
-        List<String> properties = new ArrayList<>();
+		List<String> properties = new ArrayList<>();
 
-        try {
-            for (PropertyDescriptor propertyDescriptor : Introspector.getBeanInfo(clazz).getPropertyDescriptors()) {
+		try {
+			for (PropertyDescriptor propertyDescriptor : Introspector.getBeanInfo(clazz).getPropertyDescriptors()) {
 
-                Class<?> returnType = propertyDescriptor.getReadMethod().getReturnType();
+				Class<?> returnType = propertyDescriptor.getReadMethod().getReturnType();
 
-                if (returnType == Boolean.class || returnType == boolean.class) {
-                    properties.add(propertyDescriptor.getName());
-                }
+				if (returnType == Boolean.class || returnType == boolean.class) {
+					properties.add(propertyDescriptor.getName());
+				}
 
-            }
-        } catch (IntrospectionException e) {
-            logger.info("Error while reading property of {}", clazz.getName());
-            throw new RuntimeException(e);
-        }
+			}
+		} catch (IntrospectionException e) {
+			logger.info("Error while reading property of {}", clazz.getName());
+			throw new RuntimeException(e);
+		}
 
-        return properties;
-    }
+		return properties;
+	}
 
-    public static boolean isRightsEnabled(String name, MiscRights userMiscRights) {
-        try {
-            return (boolean) PropertyUtils.getProperty(userMiscRights, name);
-        } catch (Exception e) {
-            return false;
-        }
-    }
+	public static boolean isRightsEnabled(String name, MiscRights userMiscRights) {
+		try {
+			return (boolean) PropertyUtils.getProperty(userMiscRights, name);
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }

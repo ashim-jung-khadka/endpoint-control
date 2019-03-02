@@ -1,5 +1,6 @@
 package com.ashim.config.driven.endpoint.model;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -9,17 +10,11 @@ import lombok.ToString;
  */
 @Getter
 @Setter
+@Builder
 @ToString
 public class MiscRights {
 
-    private boolean productViewable;
-    private boolean order;
-    private boolean processing;
-    private boolean hasItem;
-
-    public MiscRights() {
-        this.order = true;
-        this.processing = true;
-    }
+	private boolean apiAccessible;
+	private boolean showSampleName;
 
 }

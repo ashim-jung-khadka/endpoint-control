@@ -1,6 +1,10 @@
 access-control:
-  endpoints:
-    - url-pattern: /member
+  end-points:
+    - url-pattern: /sample
       rights:
-        - hasMx301
-        - hasMxMedicalDirector
+        - apiAccessible
+    - url-pattern: /{sampleName}
+      path-variable: hehe
+      rights:
+        - apiAccessible
+        - showSampleName

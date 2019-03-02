@@ -20,36 +20,36 @@ import javax.servlet.Filter;
 @EnableConfigurationProperties(EndpointProperties.class)
 public class ConfigDrivenApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(ConfigDrivenApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(ConfigDrivenApplication.class, args);
+	}
 
-    @Bean
-    public FilterRegistrationBean filterRegistrationBean(EndpointFilter endpointFilter) {
-        FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(endpointFilter);
-        registration.setName(endpointFilter.getClass().getName());
-        return registration;
-    }
+	@Bean
+	public FilterRegistrationBean filterRegistrationBean(EndpointFilter endpointFilter) {
+		FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
+		registration.setFilter(endpointFilter);
+		registration.setName(endpointFilter.getClass().getName());
+		return registration;
+	}
 }
 
 @Component
 class CommandLineAppStartupRunner implements CommandLineRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommandLineAppStartupRunner.class);
+	private static final Logger logger = LoggerFactory.getLogger(CommandLineAppStartupRunner.class);
 
-    @Autowired
-    private EndpointProperties endpointProperties;
+	@Autowired
+	private EndpointProperties endpointProperties;
 
-    @Value("${server.servlet.context-path}")
-    private String contextPath;
+	@Value("${server.servlet.context-path}")
+	private String contextPath;
 
-    @Override
-    public void run(String... args) {
+	@Override
+	public void run(String... args) {
 
-        logger.info("endpoint-properties : {}", endpointProperties);
-        logger.info("contextPath : {}", contextPath);
+		logger.info("endpoint-properties : {}", endpointProperties);
+		logger.info("contextPath : {}", contextPath);
 
-    }
+	}
 
 }

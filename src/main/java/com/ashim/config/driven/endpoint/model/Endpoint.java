@@ -16,10 +16,12 @@ import java.util.List;
 @ToString
 public class Endpoint {
 
-    @NotBlank(message = "url pattern should not be null or blank")
-    private String urlPattern;
+	@NotBlank(message = "url pattern should not be null or blank")
+	private String urlPattern;
 
-    @NotEmpty(message = "rights should not be null or empty")
-    private List<String> rights;
+	private String pathVariable;
+
+	@NotEmpty(message = "rights should not be null or empty")
+	private List<String> rights;
 
 }

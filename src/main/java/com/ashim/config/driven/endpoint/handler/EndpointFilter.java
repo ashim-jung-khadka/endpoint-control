@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -28,67 +29,73 @@ import java.util.stream.Collectors;
 @Component
 public class EndpointFilter implements Filter {
 
-    private static Logger logger = LoggerFactory.getLogger(EndpointFilter.class);
+	private static Logger logger = LoggerFactory.getLogger(EndpointFilter.class);
 
-    private MiscRights miscRights;
-    private EndpointAccessControl endpointAccessControl;
+	private MiscRights miscRights;
+	private EndpointAccessControl endpointAccessControl;
 
-    public EndpointFilter(EndpointProperties endpointProperties, RequestMappingHandlerMapping handlerMapping) {
+	@Value("${server.servlet.context-path}")
+	private String contextPath;
 
-        Set<String> validEndpoints = this.getAllValidEndpoints(handlerMapping);
+	public EndpointFilter(EndpointProperties endpointProperties, RequestMappingHandlerMapping handlerMapping) {
 
-        this.miscRights = new MiscRights();
-        this.endpointAccessControl = new EndpointAccessControl(endpointProperties, validEndpoints);
-    }
+		Set<String> validEndpoints = this.getAllValidEndpoints(handlerMapping);
 
-    @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
-            throws IOException, ServletException {
+		this.miscRights = MiscRights.builder().apiAccessible(true).showSampleName(false).build();
+		this.endpointAccessControl = new EndpointAccessControl(endpointProperties, validEndpoints);
+	}
 
-        HttpServletRequest request = (HttpServletRequest) servletRequest;
+	@Override
+	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
+			throws IOException, ServletException {
 
-        if (endpointAccessControl.hasAccessToEndpoint(request.getRequestURI(), miscRights)) {
-            chain.doFilter(servletRequest, servletResponse);
-        } else {
-            sendUnauthorizedResponse(servletResponse);
-        }
-    }
+		HttpServletRequest request = (HttpServletRequest) servletRequest;
+		String requestedURI = request.getRequestURI().replaceFirst(contextPath, "");
 
-    private Set<String> getAllValidEndpoints(RequestMappingHandlerMapping handlerMapping) {
+		if (endpointAccessControl.hasAccessToEndpoint(requestedURI, miscRights)) {
 
-        return handlerMapping.getHandlerMethods()
-                .keySet()
-                .stream()
-                .map(x -> x.getPatternsCondition().getPatterns().iterator().next())
-                .collect(Collectors.toSet());
-    }
+			chain.doFilter(servletRequest, servletResponse);
 
-    private void sendUnauthorizedResponse(ServletResponse servletResponse) throws IOException {
+		} else {
+			sendUnauthorizedResponse(servletResponse);
+		}
+	}
 
-        HttpServletResponse response = (HttpServletResponse) servletResponse;
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().print(this.getErrorResponse());
-        response.getWriter().flush();
-    }
+	private Set<String> getAllValidEndpoints(RequestMappingHandlerMapping handlerMapping) {
 
-    private String getErrorResponse() {
+		return handlerMapping.getHandlerMethods()
+				.keySet()
+				.stream()
+				.map(x -> x.getPatternsCondition().getPatterns().iterator().next())
+				.collect(Collectors.toSet());
+	}
 
-        Map<String, String> errorMessage = ImmutableMap.of(
-                "error", "Access denied to requested endpoint",
-                "status", HttpStatus.UNAUTHORIZED.getReasonPhrase()
-        );
+	private void sendUnauthorizedResponse(ServletResponse servletResponse) throws IOException {
 
-        String errorResponse;
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            errorResponse = objectMapper.writeValueAsString(errorMessage);
-        } catch (JsonProcessingException e) {
-            logger.info("Error while creating error message for access denied");
-            errorResponse = "{}";
-        }
+		HttpServletResponse response = (HttpServletResponse) servletResponse;
+		response.setContentType("application/json");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.getWriter().print(this.getErrorResponse());
+		response.getWriter().flush();
+	}
 
-        return errorResponse;
-    }
+	private String getErrorResponse() {
+
+		Map<String, String> errorMessage = ImmutableMap.of(
+				"error", "Access denied to requested endpoint",
+				"status", HttpStatus.UNAUTHORIZED.getReasonPhrase()
+		);
+
+		String errorResponse;
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			errorResponse = objectMapper.writeValueAsString(errorMessage);
+		} catch (JsonProcessingException e) {
+			logger.info("Error while creating error message for access denied");
+			errorResponse = "{}";
+		}
+
+		return errorResponse;
+	}
 
 }
