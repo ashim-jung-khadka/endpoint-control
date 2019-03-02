@@ -2,8 +2,6 @@ package com.ashim.config.driven.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -12,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController()
 public class SampleController {
 
-	@RequestMapping(value = "/sample", method = RequestMethod.GET)
+	@GetMapping(value = "/sample")
 	public String getSample() {
 		return "Sample";
 	}

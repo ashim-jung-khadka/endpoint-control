@@ -69,7 +69,7 @@ class EndpointAccessControl {
 		String endpointUrl = urlPattern;
 
 		if (!StringUtils.isEmpty(endpoint.getPathVariable())) {
-			endpointUrl = endpointUrl.substring(0, endpointUrl.indexOf("{")) + endpoint.getPathVariable();
+			endpointUrl = endpointUrl.substring(0, endpointUrl.indexOf('{')) + endpoint.getPathVariable();
 		}
 
 		return EndpointUtils.normalizeUrlPath(endpointUrl);

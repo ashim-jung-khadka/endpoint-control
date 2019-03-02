@@ -17,6 +17,7 @@ import java.util.List;
 public class EndpointUtils {
 
 	private static Logger logger = LoggerFactory.getLogger(EndpointUtils.class);
+	private static final String URL_SEPERATOR = "/";
 
 	private EndpointUtils() {
 	}
@@ -24,11 +25,11 @@ public class EndpointUtils {
 	public static String normalizeUrlPath(String path) {
 		path = path.trim();
 
-		if (!path.startsWith("/")) {
-			path = "/" + path;
+		if (!path.startsWith(URL_SEPERATOR)) {
+			path = URL_SEPERATOR + path;
 		}
-		if (!path.endsWith("/")) {
-			path = path + "/";
+		if (!path.endsWith(URL_SEPERATOR)) {
+			path = path + URL_SEPERATOR;
 		}
 		return path;
 	}
