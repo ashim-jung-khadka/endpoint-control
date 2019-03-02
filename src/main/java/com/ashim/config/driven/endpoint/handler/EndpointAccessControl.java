@@ -4,6 +4,7 @@ import com.ashim.config.driven.endpoint.model.Endpoint;
 import com.ashim.config.driven.endpoint.model.MiscRights;
 import com.ashim.config.driven.endpoint.utils.EndpointUtils;
 import com.google.common.base.Preconditions;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
@@ -23,7 +24,8 @@ class EndpointAccessControl {
 
 	EndpointAccessControl(EndpointProperties endpointProperties, Set<String> validEndpoints) {
 
-		Preconditions.checkNotNull(validEndpoints, "at least one valid end points should be available");
+		Preconditions.checkNotNull(endpointProperties, "endpoint properties should not be null");
+		Preconditions.checkState(!CollectionUtils.isEmpty(validEndpoints), "at least one valid end points should be available");
 
 		this.endpointAndRights = new HashMap<>();
 		this.initializeEndpointAndRights(endpointProperties, validEndpoints);
@@ -68,7 +70,8 @@ class EndpointAccessControl {
 
 		String endpointUrl = urlPattern;
 
-		if (!StringUtils.isEmpty(endpoint.getPathVariable())) {
+		if (urlPattern.contains("{")) {
+			Preconditions.checkState(!StringUtils.isEmpty(endpoint.getPathVariable()), "path variable is not provided for : " + urlPattern);
 			endpointUrl = endpointUrl.substring(0, endpointUrl.indexOf('{')) + endpoint.getPathVariable();
 		}
 

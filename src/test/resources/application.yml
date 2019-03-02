@@ -1,0 +1,34 @@
+access-control:
+  end-points:
+    - url-pattern: /sample
+      rights:
+        - apiAccessible
+    - url-pattern: /{sampleName}
+      path-variable: hehe
+      rights:
+        - apiAccessible
+        - showSampleName
+
+scenario:
+  parameters:
+    - url-pattern: /sample
+      accessible: false
+
+    - url-pattern: /sample
+      rights:
+        - apiAccessible
+      accessible: true
+
+    - url-pattern: /hehe
+      accessible: false
+
+    - url-pattern: /hehe
+      rights:
+        - apiAccessible
+      accessible: false
+
+    - url-pattern: /hehe
+      rights:
+        - apiAccessible
+        - showSampleName
+      accessible: true
